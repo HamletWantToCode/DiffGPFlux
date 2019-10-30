@@ -1,30 +1,30 @@
 using DiffGPFlux
 using Measurements
+using Random
 using Plots
-using Random: randperm
 
-# build training and testing data,
-# for X array along the 1st dimension is the feature,
-# and along the 2nd dimension is the data samples,
-# y array is required to be a Vector.
-X = reshape(Array(range(0,2π,length=100)), 1, 100)
-y = dropdims(sin.(X) + 0.01 .* randn(1, 100), dims=1)
 
-index = randperm(100)
-train_index = index[1:20]
-test_index = index[21:end]
+# This is a function with a linear trend, we want to see
+# whether NN parametrized GP mean function is able to find
+# the trend
+X = reshape(Array(range(0.0, 10.0, length=100)), 1, 100)
+y = dropdims(0.5X.*sin.(X) + 2X, dims=1) + 0.1randn(100)
+Index = randperm(100)
+train_index = Index[1:30]
+test_index = Index[31:end]
 X_train, y_train = X[:, train_index], y[train_index]
 X_test, y_test = X[:, test_index], y[test_index]
 
-# build the Gauss process model
-γ = [0.8]
+# build model
+γ = [1.0]
 β = 0.1
-μ = x -> zeros(size(x, 2))
-∇ₓμ = x -> zeros(size(x))
+lin = Dense(1, 1) |> f64
+μ = Chain(lin, x -> dropdims(x, dims=1))
+∇ₓμ = nothing
 GP = GaussProcess(γ, β, μ, ∇ₓμ, rbf, ∇ₓrbf)
 ps = Flux.params(GP)
 
-opt = ADAM(0.008)
+opt = ADAM(0.01)
 
 plt = plot(1, marker=2)
 @gif for i in 1:200
@@ -36,7 +36,9 @@ plt = plot(1, marker=2)
     end
     end every 5
 
-display(GP.γ) # 0.15405557038969345
+display(GP.γ)
+display(GP.μ.layers[1].W)
+display(GP.μ.layers[1].b)
 
 y_predict, σ_predict = predict(GP, X_train, y_train, X)
 plot(X_train', y_train, seriestype=:scatter)

@@ -20,7 +20,10 @@ X_test, y_test, ∂y_test = X[:, test_index], y[test_index], ∂y[test_index]
 
 
 γ = [0.5]
-GP = GaussProcess(γ, 0.1, rbf, ∇ₓrbf)
+β = 0.1
+μ = x -> zeros(size(x, 2))
+∇ₓμ = x -> zeros(size(x))
+GP = GaussProcess(γ, β, μ, ∇ₓμ, rbf, ∇ₓrbf)
 ps = Flux.params(GP)
 
 function loss(gp, X̄, ȳ, ∂ȳ, x)

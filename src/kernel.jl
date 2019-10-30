@@ -1,36 +1,20 @@
-function rbf(γ::AbstractArray, X::Array)::Array
-    n_samples = size(X)[2]
-    K = Array{eltype(γ)}(undef, n_samples, n_samples)
-    for i in 1:n_samples
-        K[i,i] = 1.0
-        for j in (i+1):n_samples
-            K[i,j] = K[j,i] = exp(sum(-γ.*((X[:,i]-X[:,j]).^2)))
-        end
+function rbf(γ::AbstractArray, X₁::Matrix, X₂::Matrix)::Matrix
+    N₁, N₂ = size(X₁, 2), size(X₂, 2)
+    K = Array{eltype(γ)}(undef, N₁, N₂)
+    for j in 1:N₂
+        tmp = @. exp(-γ*(X₁-X₂[:,j])^2)
+        K[:,j] = sum(tmp', dims=2)
     end
     return K
 end
 
-function rbf(γ::AbstractArray, X::Array, x::Array)::Array
-    n_samples = size(X)[2]
-    n_test = size(x)[2]
-    K = Array{eltype(γ)}(undef, n_samples, n_test)
-    for i in 1:n_samples
-        for j in 1:n_test
-            K[i,j] = exp(sum(-γ.*((X[:,i]-x[:,j]).^2)))
-        end
-    end
-    return K
-end
-
-function ∇ₓrbf(γ::AbstractArray, X::Array, x::Array)::Array
-    n_features = size(X)[1]
-    n_samples = size(X)[2]
-    n_test = size(x)[2]
-    ∇ₓK = Array{eltype(γ)}(undef, n_features, n_samples, n_test)
-    for i in 1:n_samples
-        for j in 1:n_test
-            ∇ₓK[:, i, j] = 2γ.*(X[:, i]-x[:, j]).*exp(sum(-γ.*((X[:, i]-x[:, j]).^2)))
-        end
+function ∇ₓrbf(γ::AbstractArray, X₁::Matrix, X₂::Matrix)::Array
+    F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
+    ∇ₓK = Array{eltype(γ)}(undef, F, N₁, N₂)
+    for j in 1:N₂
+        tmp = @. exp(-γ*(X₁-X₂[:,j])^2)
+        tmp1 = sum(tmp, dims=1)
+        ∇ₓK[:, :, j] = @. 2γ*(X₁-X₂[:,j])*tmp1
     end
     return ∇ₓK
 end

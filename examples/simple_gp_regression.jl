@@ -17,28 +17,25 @@ X_train, y_train = X[:, train_index], y[train_index]
 X_test, y_test = X[:, test_index], y[test_index]
 
 # build the Gauss process model
-γ = [0.8]
+γ0 = seed_duals([0.8], Float64)
 β = 0.1
-μ = x -> zeros(size(x, 2))
-∇ₓμ = x -> zeros(size(x))
-GP = GaussProcess(γ, β, μ, ∇ₓμ, rbf, ∇ₓrbf)
-ps = Flux.params(GP)
+GP = GaussProcess(γ0, β, rbf, ∇ₓrbf)
 
 opt = ADAM(0.008)
 
 plt = plot(1, marker=2)
 @gif for i in 1:200
     nll = negloglik(GP, X_train, y_train)
-    push!(plt, Tracker.data(nll))
-    Tracker.back!(nll)
-    for p in ps
-        Tracker.update!(opt, p, p.grad)
-    end
+    push!(plt, nll.value)
+    γ̄ = [g for g in nll.partials]
+    update!(opt, GP.γ, γ̄)
     end every 5
 
-display(GP.γ) # 0.15405557038969345
+display(GP.γ) # 0.30399999834411917
 
-y_predict, σ_predict = predict(GP, X_train, y_train, X)
+γ_values = [GP.γ[1].value]
+non_dual_GP = GaussProcess(γ_values, β, rbf, ∇ₓrbf)
+y_predict, σ_predict = predict(non_dual_GP, X_train, y_train, X)
 plot(X_train', y_train, seriestype=:scatter)
 plot!(X', y_predict.±σ_predict, seriestype=:scatter)
 plot!(X', y, color=:red, lw=3)

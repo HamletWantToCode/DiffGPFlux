@@ -1,22 +1,11 @@
 using DiffGPFlux
 using Test
 
+γ = rand(3)
 X = rand(3, 10)
-y = rand(10)
-x = rand(3, 2)
-
-function type_size_test(γ)
-    K = rbf(γ, X)
-    @assert size(K) == (10, 10)
-    @assert typeof(K) == Array{eltype(γ), 2}
-    k = rbf(γ, X, x)
-    @assert size(k) == (10, 2)
-    @assert typeof(k) == Array{eltype(γ), 2}
-    return true
-end
 
 @testset "DiffGPFlux.jl" begin
-    @test (γ=rand(1); type_size_test(γ))
-    @test (γ=rand(3); type_size_test(γ))
-    @test (γ=TrackedArray(rand(3)); type_size_test(γ))
+    @test (K=rbf(γ, X, X); isposdef(K))   # verify postive definite
+    @test (K=rbf(γ, X, X); diag(K)==ones(size(K, 1)))  # for RBF kernel, diagonal elements should all be 1
+    @test (K=rbf(γ, X, X); eltype(K)==eltype(γ))    # type of K should be the same as type of γ
 end

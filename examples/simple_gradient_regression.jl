@@ -19,12 +19,11 @@ X_train, y_train, ∂y_train = X[:, train_index], y[train_index], ∂y[train_ind
 X_test, y_test, ∂y_test = X[:, test_index], y[test_index], ∂y[test_index]
 
 
-γ = [0.5]
+γ0 = seed_duals([0.5], Float64)
 β = 0.1
-μ = x -> zeros(size(x, 2))
-∇ₓμ = x -> zeros(size(x))
-GP = GaussProcess(γ, β, μ, ∇ₓμ, rbf, ∇ₓrbf)
-ps = Flux.params(GP)
+GP = GaussProcess(γ0, β, rbf, ∇ₓrbf)
+θ = [GP.γ]
+indexes = [[1]]
 
 function loss(gp, X̄, ȳ, ∂ȳ, x)
     ∂ₓf = x -> ∇ₓpredict(gp, X̄, ȳ, x)
@@ -39,21 +38,21 @@ plt = plot(1, marker=2)
     L = loss(GP, X_train, y_train, ∂y_train, X_train)
     if i%25 == 1
         @printf("Step %d, train error %.4f, test error %.4f\n",
-                i, Tracker.data(L),
-                Tracker.data(loss(GP, X_test, y_test, ∂y_test, X_test)))
+                i, L.value,
+                (loss(GP, X_test, y_test, ∂y_test, X_test)).value)
     end
-    push!(plt, Tracker.data(L))
-    Tracker.back!(L)
-    for p in ps
-        Tracker.update!(opt, p, p.grad)
-    end
+    push!(plt, L.value)
+    θ̄_array = [g for g in L.partials]
+    θ̄ = grads(θ̄_array, indexes)
+    update!(opt, θ, θ̄, ForwardDiff.Chunk(1))
     end every 10
 
 @show(GP.γ)
 
-
-pred_y, pred_σ = predict(GP, X_train, y_train, X)
-pred_∂y = Flux.data.(∇ₓpredict(GP, X_train, y_train, X))
+γ_values = [GP.γ[1].value]
+non_dual_GP = GaussProcess(γ_values, β, rbf, ∇ₓrbf)
+pred_y, pred_σ = predict(non_dual_GP, X_train, y_train, X)
+pred_∂y = ∇ₓpredict(non_dual_GP, X_train, y_train, X)
 plot(X', pred_y.±pred_σ, color=:blue)
 plot!(X', y, seriestype=:scatter, color=:red)
 

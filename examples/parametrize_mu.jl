@@ -16,31 +16,46 @@ X_train, y_train = X[:, train_index], y[train_index]
 X_test, y_test = X[:, test_index], y[test_index]
 
 # build model
-γ = [1.0]
+θ₀ = seed_duals([0.8, rand(2)...], Float64)
+γ₀ = [θ₀[1]]
 β = 0.1
-lin = Dense(1, 1) |> f64
-μ = Chain(lin, x -> dropdims(x, dims=1))
-∇ₓμ = nothing
-GP = GaussProcess(γ, β, μ, ∇ₓμ, rbf, ∇ₓrbf)
-ps = Flux.params(GP)
+
+struct linear_fun{T}
+    a::T
+    b::T
+end
+
+(m::linear_fun)(x) = dropdims(m.a.*x .+ m.b, dims=1)
+
+a₀ = [θ₀[2]]
+b₀ = [θ₀[3]]
+μ = linear_fun(a₀, b₀)
+
+GP = GaussProcess(γ₀, β, μ, nothing, rbf, nothing)
+Θ = [GP.γ, GP.μ.a, GP.μ.b]
+indexes = [[1], [2], [3]]
 
 opt = ADAM(0.01)
 
 plt = plot(1, marker=2)
 @gif for i in 1:200
     nll = negloglik(GP, X_train, y_train)
-    push!(plt, Tracker.data(nll))
-    Tracker.back!(nll)
-    for p in ps
-        Tracker.update!(opt, p, p.grad)
-    end
+    push!(plt, nll.value)
+    Θ̄_array = [g for g in nll.partials]
+    Θ̄ = grads(Θ̄_array, indexes)
+    update!(opt, Θ, Θ̄, ForwardDiff.Chunk(3))
     end every 5
 
 display(GP.γ)
-display(GP.μ.layers[1].W)
-display(GP.μ.layers[1].b)
+display(GP.μ.a)
+display(GP.μ.b)
 
-y_predict, σ_predict = predict(GP, X_train, y_train, X)
+γ_values = [GP.γ[1].value]
+a_values = [GP.μ.a[1].value]
+b_values = [GP.μ.b[1].value]
+non_dual_μ = x -> dropdims(a_values.*x .+ b_values, dims=1)
+non_dual_GP = GaussProcess(γ_values, β, non_dual_μ, nothing, rbf, nothing)
+y_predict, σ_predict = predict(non_dual_GP, X_train, y_train, X)
 plot(X_train', y_train, seriestype=:scatter)
 plot!(X', y_predict.±σ_predict, seriestype=:scatter)
 plot!(X', y, color=:red, lw=3)

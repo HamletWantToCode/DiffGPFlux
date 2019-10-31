@@ -9,12 +9,13 @@ end
 relu(x::Real) = max(zero(x), x)
 
 # update method
-function update!(opt, ps::Array, ps̅::Array, N)
-  for p in ps, p̄ in ps̅
-    p_value = [element.value for element in p]
-    p_value .-= apply!(opt, p_value, p̄)
-    new_p = seed_duals(p_value, eltype(p̄), N)
-    p .= new_p
+function update!(opt, ps::Array, ps̄::Array, N)
+  len = length(ps)
+  for i in 1:len
+    p_value = [element.value for element in ps[i]]
+    p_value .-= apply!(opt, p_value, ps̄[i])
+    new_p = seed_duals(p_value, eltype(ps̄[i]), N)
+    ps[i] .= new_p
   end
 end
 

@@ -19,7 +19,7 @@ X_train, y_train, ∂y_train = X[:, train_index], y[train_index], ∂y[train_ind
 X_test, y_test, ∂y_test = X[:, test_index], y[test_index], ∂y[test_index]
 
 
-γ0 = seed_duals([0.5], Float64)
+γ0 = seed_duals([0.5], Float64, 1)
 β = 0.1
 GP = GaussProcess(γ0, β, rbf, ∇ₓrbf)
 θ = [GP.γ]
@@ -44,7 +44,7 @@ plt = plot(1, marker=2)
     push!(plt, L.value)
     θ̄_array = [g for g in L.partials]
     θ̄ = grads(θ̄_array, indexes)
-    update!(opt, θ, θ̄, ForwardDiff.Chunk(1))
+    update!(opt, θ, θ̄, 1)
     end every 10
 
 @show(GP.γ)

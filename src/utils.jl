@@ -1,6 +1,6 @@
 # Convert array of particular type to array of Dual
 function seed_duals(x::AbstractArray{V},::Type{T},
-                    ::ForwardDiff.Chunk{N} = ForwardDiff.Chunk(x)) where {V,T,N}
+                    N::Integer) where {V,T}
   seeds = ForwardDiff.construct_seeds(ForwardDiff.Partials{N,V})
   duals = [ForwardDiff.Dual{T}(x[i],seeds[i]) for i in eachindex(x)]
 end
@@ -9,11 +9,11 @@ end
 relu(x::Real) = max(zero(x), x)
 
 # update method
-function update!(opt, ps::Array, ps̅::Array, chunk)
+function update!(opt, ps::Array, ps̅::Array, N)
   for p in ps, p̄ in ps̅
     p_value = [element.value for element in p]
     p_value .-= apply!(opt, p_value, p̄)
-    new_p = seed_duals(p_value, eltype(p̄), chunk)
+    new_p = seed_duals(p_value, eltype(p̄), N)
     p .= new_p
   end
 end

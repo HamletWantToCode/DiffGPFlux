@@ -16,7 +16,7 @@ X_train, y_train = X[:, train_index], y[train_index]
 X_test, y_test = X[:, test_index], y[test_index]
 
 # build model
-θ₀ = seed_duals([0.8, rand(2)...], Float64)
+θ₀ = seed_duals([0.8, rand(2)...], Float64, 3)
 γ₀ = [θ₀[1]]
 β = 0.1
 
@@ -43,7 +43,7 @@ plt = plot(1, marker=2)
     push!(plt, nll.value)
     Θ̄_array = [g for g in nll.partials]
     Θ̄ = grads(Θ̄_array, indexes)
-    update!(opt, Θ, Θ̄, ForwardDiff.Chunk(3))
+    update!(opt, Θ, Θ̄, 3)
     end every 5
 
 display(GP.γ)

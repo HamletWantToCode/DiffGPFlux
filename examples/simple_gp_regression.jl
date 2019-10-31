@@ -17,9 +17,11 @@ X_train, y_train = X[:, train_index], y[train_index]
 X_test, y_test = X[:, test_index], y[test_index]
 
 # build the Gauss process model
-γ0 = seed_duals([0.8], Float64)
+γ0 = seed_duals([0.8], Float64, 1)
 β = 0.1
 GP = GaussProcess(γ0, β, rbf, ∇ₓrbf)
+θ = [GP.γ]
+indexes = [[1]]
 
 opt = ADAM(0.008)
 
@@ -27,8 +29,9 @@ plt = plot(1, marker=2)
 @gif for i in 1:200
     nll = negloglik(GP, X_train, y_train)
     push!(plt, nll.value)
-    γ̄ = [g for g in nll.partials]
-    update!(opt, GP.γ, γ̄)
+    θ̄_array = [g for g in nll.partials]
+    θ̄ = grads(θ̄_array, indexes)
+    update!(opt, θ, θ̄, 1)
     end every 5
 
 display(GP.γ) # 0.30399999834411917

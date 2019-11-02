@@ -16,7 +16,7 @@ X_train, y_train = X[:, train_index], y[train_index]
 X_test, y_test = X[:, test_index], y[test_index]
 
 # build model
-θ₀ = seed_duals([0.8, rand(2)...], Float64, 3)
+θ₀ = seed_duals([5.0, 3.0, 0.1], Float64, 3)
 γ₀ = [θ₀[1]]
 β = 0.1
 
@@ -38,7 +38,7 @@ indexes = [[1], [2], [3]]
 opt = ADAM(0.01)
 
 plt = plot(1, marker=2)
-@gif for i in 1:200
+@gif for i in 1:500
     nll = negloglik(GP, X_train, y_train)
     push!(plt, nll.value)
     Θ̄_array = [g for g in nll.partials]

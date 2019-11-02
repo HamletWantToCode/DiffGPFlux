@@ -8,10 +8,12 @@ module DiffGPFlux
     include("exact_gp.jl")
     include("kernel.jl")
     include("utils.jl")
+    include("mean.jl")
     include("optimizers.jl")
 
     export GaussProcess, negloglik, predict, ∇ₓpredict
-    export rbf, ∇ₓrbf
+    export rbf, ∇ₓrbf, linear, ∇ₓlinear
+    export ConstMean, LinearMean
     export seed_duals, update!, grads
     export Descent, Momentum, Nesterov, RMSProp, ADAM, ADAGrad
 

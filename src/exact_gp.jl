@@ -14,7 +14,9 @@ function GaussProcess(γ::Array, β::Real, Σ, ∇ₓΣ)
 end
 
 function negloglik(GP::GaussProcess, X̄::Matrix, ȳ::Vector)
-    K = GP.Σ(relu.(GP.γ), X̄, X̄) + (GP.β^2)*I
+    K = GP.Σ(relu.(GP.γ), X̄, X̄)
+    K += K'
+    K += (GP.β^2)*I
     μ = GP.μ(X̄)
     likelihood = MvNormal(μ, K)
     nll = -1*logpdf(likelihood, ȳ)
@@ -22,7 +24,9 @@ function negloglik(GP::GaussProcess, X̄::Matrix, ȳ::Vector)
 end
 
 function predict(GP::GaussProcess, X̄::Matrix, ȳ::Vector, x::Matrix)
-    K = GP.Σ(GP.γ, X̄, X̄) + (GP.β^2)*I
+    K = GP.Σ(GP.γ, X̄, X̄)
+    K += K'
+    K += (GP.β^2)*I
     k = GP.Σ(GP.γ, x, X̄)
     reduced_ȳ = ȳ - GP.μ(X̄)
 
@@ -36,7 +40,9 @@ end
 
 function ∇ₓpredict(GP::GaussProcess, X̄::Matrix, ȳ::Vector, x::Matrix)
     F, N₁, N₂ = size(X̄, 1), size(X̄, 2), size(x, 2)
-    K = GP.Σ(relu.(GP.γ), X̄, X̄) + (GP.β^2)*I
+    K = GP.Σ(relu.(GP.γ), X̄, X̄)
+    K += K'
+    K += (GP.β^2)*I
     ∇ₓk = GP.∇ₓΣ(relu.(GP.γ), x, X̄)
     ∇ₓμ = convert.(eltype(GP.γ), GP.∇ₓμ(x))
     reduced_ȳ = ȳ - GP.μ(X̄)

@@ -29,3 +29,31 @@ function ∇ₓrbf(γ::Array, X₁::Matrix, X₂::Matrix)::Array  # derivative o
     end
     return ∇ₓK
 end
+
+function linear(γ::Array, X₁::Matrix, X₂::Matrix)::Array
+      F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
+      K = Array{eltype(γ)}(undef, N₁, N₂)
+      for j in 1:N₂
+            for i in 1:N₁
+                  dot_prod = zero(eltype(γ))
+                  for m in 1:F
+                        dot_prod += γ[m]*X₁[m,i]*X₂[m,j]
+                  end
+                  K[i,j] = dot_prod + γ[F+1]
+            end
+      end
+      return K
+end
+
+function ∇ₓlinear(γ::Array, X₁::Matrix, X₂::Matrix)::Array
+      F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
+      ∇ₓK = Array{eltype(γ)}(undef, F, N₁, N₂)
+      for j in 1:N₂
+            for i in 1:N₁
+                  for l in 1:F
+                        ∇ₓK[l,i,j] = γ[l]*X₂[l,j]
+                  end
+            end
+      end
+      return ∇ₓK
+end

@@ -8,8 +8,8 @@ f(x) = 2.0*x-3.0
 X = reshape(Array(range(0.0, 10.0, length=100)), 1, 100)
 y = dropdims(f.(X), dims=1)+0.1*randn(100)
 index = randperm(100)
-train_index = index[1:50]
-test_index = index[51:100]
+train_index = index[1:20]
+test_index = index[21:100]
 train_X, train_y = X[:, train_index], y[train_index]
 test_X, test_y = X[:, test_index], y[test_index]
 
@@ -41,6 +41,7 @@ display(GP.γ)
 γ_values = [GP.γ[1].value, GP.γ[2].value]
 # c_values = [GP.μ.c[1].value]
 # non_dual_μ = ConstMean(c_values)
+γ_values = [1.0, 1.0]
 non_dual_GP = GaussProcess(γ_values, β, linear, ∇ₓlinear)
 y_predict, σ_predict = predict(non_dual_GP, train_X, train_y, X)
 plot(train_X', train_y, seriestype=:scatter)

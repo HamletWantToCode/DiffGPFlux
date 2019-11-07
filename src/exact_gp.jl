@@ -24,9 +24,7 @@ function negloglik(GP::GaussProcess, X̄::Matrix, ȳ::Vector)
 end
 
 function predict(GP::GaussProcess, X̄::Matrix, ȳ::Vector, x::Matrix)
-    K = GP.Σ(GP.γ, X̄, X̄)
-    K += K'
-    K += (GP.β^2)*I
+    K = GP.Σ(GP.γ, X̄, X̄) + (GP.β^2)*I
     k = GP.Σ(GP.γ, x, X̄)
     reduced_ȳ = ȳ - GP.μ(X̄)
 

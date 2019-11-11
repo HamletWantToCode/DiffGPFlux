@@ -1,59 +1,67 @@
-function rbf(γ::Array, X₁::Matrix, X₂::Matrix)::Matrix
+function rbf!(K::Array{T}, γ::Array{T}, X₁::Matrix{D}, X₂::Matrix{D}) where {T, D}
       F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
-      K = Array{eltype(γ)}(undef, N₁, N₂)
       for j in 1:N₂
             for i in 1:N₁
-                  sqd = zero(eltype(γ))
+                  sqd = zero(T)
                   for k in 1:F
                         sqd += γ[k]*(X₁[k,i] - X₂[k,j])^2
                   end
                   K[i,j] = exp(-0.5*sqd)
             end
       end
-      return K
 end
 
-function ∇ₓrbf(γ::Array, X₁::Matrix, X₂::Matrix)::Array  # derivative on X1
-    F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
-    ∇ₓK = Array{eltype(γ)}(undef, F, N₁, N₂)
-    for j in 1:N₂
-          for i in 1:N₁
-                sqd = zero(eltype(γ))
-                for m in 1:F
-                      sqd += γ[m]*(X₁[m,i]-X₂[m,j])^2
-                end
-                for l in 1:F
-                      ∇ₓK[l,i,j] = -γ[l]*(X₁[l,i]-X₂[l,j])*exp(-0.5*sqd)
-                end
-          end
-    end
-    return ∇ₓK
-end
+# function ∇ₓrbf!(∇ₓK::Array{T}, γ::Array{T}, X₁::Matrix{D}, X₂::Matrix{D}) where {T, D}  # derivative on X1
+#     F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
+#     for j in 1:N₂
+#           for i in 1:N₁
+#                 sqd = zero(T)
+#                 for m in 1:F
+#                       sqd += γ[m]*(X₁[m,i]-X₂[m,j])^2
+#                 end
+#                 for l in 1:F
+#                       ∇ₓK[l,i,j] = -γ[l]*(X₁[l,i]-X₂[l,j])*exp(-0.5*sqd)
+#                 end
+#           end
+#     end
+# end
 
-function linear(γ::Array, X₁::Matrix, X₂::Matrix)::Array
+function linear!(K::Array{T}, γ::Array{T}, X₁::Matrix{D}, X₂::Matrix{D}) where {T, D}
       F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
-      K = Array{eltype(γ)}(undef, N₁, N₂)
       for j in 1:N₂
             for i in 1:N₁
-                  dot_prod = zero(eltype(γ))
+                  dot_prod = zero(T)
                   for m in 1:F
                         dot_prod += γ[m]*X₁[m,i]*X₂[m,j]
                   end
                   K[i,j] = dot_prod + γ[F+1]
             end
       end
-      return K
 end
 
-function ∇ₓlinear(γ::Array, X₁::Matrix, X₂::Matrix)::Array
+# function ∇ₓlinear!(∇ₓK::Array{T}, γ::Array{T}, X₁::Matrix{D}, X₂::Matrix{D}) where {T, D}
+#       F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
+#       for j in 1:N₂
+#             for i in 1:N₁
+#                   for l in 1:F
+#                         ∇ₓK[l,i,j] = γ[l]*X₂[l,j]
+#                   end
+#             end
+#       end
+# end
+
+function identity_decomposable_kernel!(K::Array{T}, γ::Array{T}, X₁::Matrix{D}, X₂::Matrix{D}) where {T, D}
       F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
-      ∇ₓK = Array{eltype(γ)}(undef, F, N₁, N₂)
-      for j in 1:N₂
-            for i in 1:N₁
-                  for l in 1:F
-                        ∇ₓK[l,i,j] = γ[l]*X₂[l,j]
-                  end
+      N_ROW, N_COL = F*N₁, F*N₂
+      for j in 1:N₂, i in 1:N₁
+            sqd = zero(T)
+            for l in 1:F
+                  sqd += γ[l]*(X₁[l,i] - X₂[l,j])^2
+            end
+            start_index = N_ROW*(j-1)*F+(i-1)*F+1
+            end_index = N_ROW*(j*F-1)+i*F
+            for m in start_index:N_ROW+1:end_index
+                  K[m] = exp(-0.5*sqd)
             end
       end
-      return ∇ₓK
 end

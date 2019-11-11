@@ -11,10 +11,10 @@ module DiffGPFlux
     include("mean.jl")
     include("optimizers.jl")
 
-    export GaussProcess, negloglik, predict, ∇ₓpredict
-    export rbf, ∇ₓrbf, linear, ∇ₓlinear
+    export GaussProcess, negloglik, predict!
+    export rbf!, linear!, identity_decomposable_kernel!
     export ConstMean, LinearMean
-    export seed_duals, update!, grads
+    export seed_duals, update!, grads, pre_alloc
     export Descent, Momentum, Nesterov, RMSProp, ADAM, ADAGrad
 
 end # module

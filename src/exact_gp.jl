@@ -33,7 +33,13 @@ function predict!(GP::GaussProcess, X::Matrix, y::Vector, x::Matrix, K̄::Array,
     N₀ = size(K̄, 1)
     for i₀ in 1:N₀
         K̄[i₀,i₀] = K̄[i₀,i₀] + GP.β^2
-        y[i₀] = y[i₀] - GP.μ(@view X[:, i₀])
+    end
+
+    Nk₀ = size(X, 2)
+    F = size(X, 1)
+    for ik₀ in 1:Nk₀
+        iik₀ = F*(ik₀-1)+1
+        y[iik₀:1:iik₀+F-1] = y[iik₀:1:iik₀+F-1] - GP.μ(X[:, ik₀])
     end
 
     Cho_K̄ = cholesky(K̄)
@@ -44,7 +50,13 @@ function predict!(GP::GaussProcess, X::Matrix, y::Vector, x::Matrix, K̄::Array,
         for i₁ in 1:N₀
             s = s + k̄[i₁, j₁]*α[i₁]
         end
-        μ̄[j₁] = GP.μ(@view x[:, j₁]) + s
+        μ̄[j₁] = s
+    end
+
+    Nx = size(x, 2)
+    for ix in 1:Nx
+        iix = F*(ix-1)+1
+        μ̄[iix:1:iix+F-1] = μ̄[iix:1:iix+F-1] + GP.μ(x[:, ix])
     end
 
     for j₂ in 1:N₁

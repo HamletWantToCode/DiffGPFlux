@@ -1,4 +1,4 @@
-function rbf!(K::Array{T}, γ::Array{T}, X₁::Matrix{D}, X₂::Matrix{D}) where {T, D}
+function rbf!(K::Array, γ::Array, X₁::Matrix, X₂::Matrix)
       F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
       for j in 1:N₂
             for i in 1:N₁
@@ -26,7 +26,7 @@ end
 #     end
 # end
 
-function linear!(K::Array{T}, γ::Array{T}, X₁::Matrix{D}, X₂::Matrix{D}) where {T, D}
+function linear!(K::Array, γ::Array, X₁::Matrix, X₂::Matrix)
       F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
       for j in 1:N₂
             for i in 1:N₁
@@ -50,7 +50,7 @@ end
 #       end
 # end
 
-function identity_decomposable_kernel!(K::Array{T}, γ::Array{T}, X₁::Matrix{D}, X₂::Matrix{D}) where {T, D}
+function identity_decomposable_kernel!(K::Array, γ::Array, X₁::Matrix, X₂::Matrix)
       F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
       N_ROW, N_COL = F*N₁, F*N₂
       for j in 1:N₂, i in 1:N₁

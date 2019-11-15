@@ -19,15 +19,19 @@ X_test, y_test = X[:, test_index], y[test_index]
 # build the Gauss process model
 γ0 = seed_duals([0.8], Float64, 1)
 β = 0.1
-GP = GaussProcess(γ0, β, rbf, ∇ₓrbf)
+μ = x -> 0.0
+GP = GaussProcess(γ0, β, μ, rbf!)
 θ = [GP.γ]
 indexes = [[1]]
+K̄, k̄, K, μ₀, μ̄, σ̄ = pre_alloc(GP.γ, X_train, y_train, X_test)
+# predict!(GP, X, y, x, K̄, k̄, K, μ̄, σ̄)
+
 
 opt = ADAM(0.008)
 
 plt = plot(1, marker=2)
 @gif for i in 1:200
-    nll = negloglik(GP, X_train, y_train)
+    nll = negloglik(GP, X_train, y_train, K̄, μ₀)
     push!(plt, nll.value)
     θ̄_array = [g for g in nll.partials]
     θ̄ = grads(θ̄_array, indexes)
@@ -37,8 +41,10 @@ plt = plot(1, marker=2)
 display(GP.γ) # 0.30399999834411917
 
 γ_values = [GP.γ[1].value]
-non_dual_GP = GaussProcess(γ_values, β, rbf, ∇ₓrbf)
-y_predict, σ_predict = predict(non_dual_GP, X_train, y_train, X)
-plot(X_train', y_train, seriestype=:scatter)
-plot!(X', y_predict.±σ_predict, seriestype=:scatter)
+μ = x -> [0.0]
+non_dual_GP = GaussProcess(γ_values, β, μ, rbf!)
+K̄, k̄, K, μ₀, μ̄, σ̄ = pre_alloc(γ_values, X_train, y_train, X_test)
+predict!(non_dual_GP, X_train, y_train, X_test, K̄, k̄, K, μ̄, σ̄)
+plot(X_test', μ̄.±σ̄, seriestype=:scatter)
+plot!(X_train', y_train, seriestype=:scatter)
 plot!(X', y, color=:red, lw=3)

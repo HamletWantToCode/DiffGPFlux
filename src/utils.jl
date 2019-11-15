@@ -30,7 +30,7 @@ function grads(θ̄::Vector{T}, indexes) where T
 end
 
 # pre-allocate storage !! still need to be checked
-function pre_alloc(γ, X, y, x)
+function vec_pre_alloc(γ, X, y, x)
   T = eltype(γ)
   N₀ = size(X, 2)
   F = size(X, 1)
@@ -41,5 +41,19 @@ function pre_alloc(γ, X, y, x)
   μ₀ = zeros(T, N₀*F)
   μ̄ = zeros(T, N₁*F)
   σ̄ = zeros(T, N₁*F)
+  return K̄, k̄, K, μ₀, μ̄, σ̄
+end
+
+function scalar_pre_alloc(γ, X, y, x)
+  T = eltype(γ)
+  N₀ = size(X, 2)
+  F = size(X, 1)
+  N₁ = size(x, 2)
+  K̄ = zeros(T, N₀, N₀)
+  k̄ = zeros(T, N₀, N₁)
+  K = zeros(T, N₁, N₁)
+  μ₀ = zeros(T, N₀)
+  μ̄ = zeros(T, N₁)
+  σ̄ = zeros(T, N₁)
   return K̄, k̄, K, μ₀, μ̄, σ̄
 end

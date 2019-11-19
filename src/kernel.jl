@@ -57,3 +57,21 @@ function ∇ₓlinear(γ::Array, X₁::Matrix, X₂::Matrix)::Array
       end
       return ∇ₓK
 end
+
+function mixed_effect_kernel(θ::Array, X₁::Matrix, X₂::Matrix)::Matrix
+      F, N₁, N₂ = size(X₁, 1), size(X₁, 2), size(X₂, 2)
+      K = Array{eltype(γ)}(undef, N₁, N₂)
+      M = ones(F, F)
+      D = diagm(ones(F))
+      for j in 1:N₂
+            for i in 1:N₁
+                  sqd = zero(eltype(γ))
+                  for k in 1:F
+                        sqd += θ[k]*(X₁[k,i] - X₂[k,j])^2
+                  end
+                  K[i,j] = exp(-0.5*sqd)
+            end
+      end
+      𝐾 = kron(K, θ[F+1]*M+(1-θ[F+1])*D)
+      return 𝐾
+end
